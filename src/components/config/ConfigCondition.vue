@@ -1015,8 +1015,9 @@ export default {
   },
 
   methods: {
-    handleUpdateData(ddd) {
-      this.bigBuckets = !!ddd.map(d => d.value).find(v => v > 10000);
+    handleUpdateData(data) {
+      if (!data) return;
+      this.bigBuckets = !!data.map(d => d.value).find(v => v > 10000);
     },
 
     changeGroupedOver() {
