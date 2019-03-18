@@ -313,6 +313,16 @@ export default {
       return config;
     },
 
+    newterm(state) {
+      let config = {};
+
+      if (state.match.queryKey) {
+        config.query_key = state.match.queryKey;
+      }
+
+      return config;
+    },
+
     spike(state) {
       let config = {};
 
@@ -466,13 +476,28 @@ export default {
     },
 
     queryString(state, getters) {
+      let qs = {
+        query: getters['query/queryString'] || `${state.settings.timeField}:*`
+      };
+
+      // the new term rule triggers a bug in elastalert
+      // so we need to slightly change the way queries are sent
+      // https://github.com/Yelp/elastalert/issues/1042
+      if (state.match.type === 'new_term') {
+        return {
+          filter: [
+            {
+              query_string: qs
+            }
+          ]
+        };
+      }
+
       return {
         filter: [
           {
             query: {
-              query_string: {
-                query: getters['query/queryString'] || `${state.settings.timeField}:*`
-              }
+              query_string: qs
             }
           }
         ]
@@ -690,6 +715,8 @@ export default {
         config = { ...config, ...getters.metricagg };
       } else if (state.match.type === 'spike') {
         config = { ...config, ...getters.spike };
+      } else if (state.match.type === 'new_term') {
+        config = { ...config, ...getters.newterm };
       }
 
       // Sort the keys in the object so it appears alphabetically in the UI

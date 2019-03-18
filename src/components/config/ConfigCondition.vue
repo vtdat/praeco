@@ -15,6 +15,7 @@
           <el-menu-item index="field in list">field in list</el-menu-item>
           <el-menu-item index="field not in list">field not in list</el-menu-item>
           <el-menu-item index="field changes">field changes</el-menu-item>
+          <el-menu-item index="new term">new term</el-menu-item>
         </el-menu>
       </div>
     </el-popover>
@@ -161,7 +162,8 @@
     <el-popover v-if="showPopGroup" :class="{ 'is-invalid': !popGroupValid }" v-model="popGroupVisible">
       <span slot="reference" class="pop-trigger">
         <span>
-          <span>GROUPED OVER </span>
+          <span v-if="metricAggType === 'new term'">IN FIELD </span>
+          <span v-else>GROUPED OVER </span>
         </span>
         <span>{{ queryKey }}</span>
       </span>
@@ -285,7 +287,8 @@
 
     <span class="pop-trigger" @click="popFilterVisible = true">
       <span v-if="queryString === defaultFilter">UNFILTERED</span>
-      <span v-else>{{ queryString }}</span>
+      <span v-else>WITH FILTER</span>
+      <span v-if="queryString !== defaultFilter"> {{ queryString }}</span>
     </span>
 
     <el-dialog :visible.sync="popFilterVisible" :show-close="false" fullscreen>
@@ -784,7 +787,7 @@ export default {
 
     showPopOf() {
       return (
-        this.metricAggType !== 'count' &&
+        this.metricAggType !== 'count' && this.metricAggType !== 'new term' &&
         !['field changes', 'field in list', 'field not in list'].includes(this.metricAggType)
       );
     },
@@ -792,12 +795,12 @@ export default {
     showPopOver() {
       return (
         this.spikeOrThreshold !== 'any' &&
-        !['field changes', 'field in list', 'field not in list'].includes(this.metricAggType)
+        !['field changes', 'field in list', 'field not in list', 'new term'].includes(this.metricAggType)
       );
     },
 
     showPopAbove() {
-      return !['field changes', 'field in list', 'field not in list'].includes(this.metricAggType);
+      return !['field changes', 'field in list', 'field not in list', 'new term'].includes(this.metricAggType);
     },
 
     showPopCompare() {
@@ -805,7 +808,7 @@ export default {
     },
 
     showPopGroup() {
-      return this.metricAggType === 'field changes';
+      return this.metricAggType === 'field changes' || this.metricAggType === 'new term';
     },
 
     showPopBlacklist() {
@@ -818,7 +821,7 @@ export default {
 
     showTime() {
       return (
-        !['field in list', 'field not in list'].includes(this.metricAggType) &&
+        !['field in list', 'field not in list', 'new term'].includes(this.metricAggType) &&
         this.spikeOrThreshold !== 'any'
       );
     },
@@ -993,6 +996,8 @@ export default {
       } else if (this.type === 'spike') {
         this.metricAggType = 'count';
         this.spikeOrThreshold = 'spike';
+      } else if (this.type === 'new_term') {
+        this.metricAggType = 'new term';
       }
 
       // if rule supports queryKey, set groupedOver to field
@@ -1321,6 +1326,8 @@ export default {
       } else if (val === 'field not in list') {
         this.type = 'whitelist';
         this.compareKey = '';
+      } else if (val === 'new term') {
+        this.type = 'new_term';
       } else if (val === 'field changes') {
         this.type = 'change';
         this.compareKey = [];
